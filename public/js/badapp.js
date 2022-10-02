@@ -1,28 +1,29 @@
-import {
-  h,
-  Component,
-  render,
-} from "https://unpkg.com/preact@10.11.0/dist/preact.module.js";
+const {
+  preact: { Component, h, render },
+  d3,
+} = window;
 
-const { d3 } = window;
+import { unixToDate, aqiScale } from "./utils.js";
+
+import RelativeTime from "./components/RelativeTime.js";
 
 const sensors = {
   indoor: 1,
   outdoor: 2,
 };
 
-class Dashboard extends Component {
+class BadDashboard extends Component {
   render() {
     return h(
       "div",
       {},
-      h(Sensor, { id: "indoor" }),
-      h(Sensor, { id: "outdoor" })
+      h(BadSensor, { id: "indoor" }),
+      h(BadSensor, { id: "outdoor" })
     );
   }
 }
 
-class Sensor extends Component {
+class BadSensor extends Component {
   state = {
     loading: true,
     errored: false,
@@ -41,7 +42,7 @@ class Sensor extends Component {
     try {
       const resp = await fetch(
         `https://weather.withmatt.com/api/series?id=${sensorId}&limit=${
-          (60 * 6) / 2
+          (60 * 2) / 2
         }`
       );
       const data = await resp.json();
@@ -207,110 +208,4 @@ class Sensor extends Component {
   }
 }
 
-class RelativeTime extends Component {
-  render({ value, ...props }) {
-    const delta = Date.now() - value.getTime();
-    const seconds = Math.abs(delta) / 1000;
-    const minutes = seconds / 60;
-
-    let words;
-
-    if (delta <= 0) {
-      words = "just now";
-    } else if (seconds < 45) {
-      words = "a few seconds ago";
-    } else if (seconds < 90) {
-      words = "a minute ago";
-    } else if (minutes < 45) {
-      words = `${Math.round(minutes)} minutes ago`;
-    } else {
-      words = "too long ago";
-    }
-
-    return h(
-      "time",
-      {
-        title: value.toLocaleString(),
-        datetime: value.toISOString(),
-        ...props,
-      },
-      words
-    );
-  }
-}
-/*
-offsets = {
-  0: 009966,
-  100: ffde33
-}
-*/
-
-function unixToDate(value) {
-  return new Date(parseInt(value, 10) * 1000);
-}
-
-function aqiScale(value) {
-  if (value <= 50) {
-    return {
-      color: "#009966",
-      level: "Good",
-      implications:
-        "Air quality is considered satisfactory, and air pollution poses little or no risk",
-      caution: null,
-    };
-  }
-
-  if (value <= 100) {
-    return {
-      color: "#ffde33",
-      level: "Moderate",
-      implications:
-        "Air quality is acceptable; however, for some pollutants there may be a moderate health concern for a very small number of people who are unusually sensitive to air pollution.",
-      caution:
-        "Active children and adults, and people with respiratory disease, such as asthma, should limit prolonged outdoor exertion.",
-    };
-  }
-
-  if (value <= 150) {
-    return {
-      color: "#ff9933",
-      level: "Unhealthy for Sensitive Groups",
-      implications:
-        "Members of sensitive groups may experience health effects. The general public is not likely to be affected.",
-      caution:
-        "Active children and adults, and people with respiratory disease, such as asthma, should limit prolonged outdoor exertion.",
-    };
-  }
-
-  if (value <= 200) {
-    return {
-      color: "#cc0033",
-      level: "Unhealthy",
-      implications:
-        "Everyone may begin to experience health effects; members of sensitive groups may experience more serious health effects",
-      caution:
-        "Active children and adults, and people with respiratory disease, such as asthma, should avoid prolonged outdoor exertion; everyone else, especially children, should limit prolonged outdoor exertion",
-    };
-  }
-
-  if (value <= 300) {
-    return {
-      color: "#660099",
-      level: "Very Unhealthy",
-      implications:
-        "Health warnings of emergency conditions. The entire population is more likely to be affected.",
-      caution:
-        "Active children and adults, and people with respiratory disease, such as asthma, should avoid all outdoor exertion; everyone else, especially children, should limit outdoor exertion.",
-    };
-  }
-
-  return {
-    color: "#7e0023",
-    level: "Hazardous",
-    implications:
-      "Health alert: everyone may experience more serious health effects",
-    caution: "Everyone should avoid all outdoor exertion",
-  };
-}
-
-render(h(Dashboard), document.body);
+render(h(BadDashboard), document.body);
