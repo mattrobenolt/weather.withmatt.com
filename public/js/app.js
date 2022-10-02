@@ -25,22 +25,43 @@ class Sensor extends Component {
     super();
     this.state = {
       loading: true,
+      errored: false,
     };
   }
 
   async componentDidMount() {
+    await this.refresh();
+    this.timer = setInterval(async () => {
+      await this.refresh();
+    }, 30000);
+  }
+
+  async refresh() {
     const sensorId = sensors[this.props.id];
-    const resp = await fetch(`/api/series?id=${sensorId}`);
-    const data = await resp.json();
-    this.setState({
-      loading: false,
-      data,
-    });
+    try {
+      const resp = await fetch(`/api/series?id=${sensorId}&limit=1`);
+      const data = await resp.json();
+      this.setState({
+        loading: false,
+        data,
+      });
+    } catch (e) {
+      this.setState({
+        loading: false,
+        errored: true,
+        error: e,
+      });
+    }
   }
 
   render() {
     if (this.state.loading) {
       return h("h1", {}, "loading...");
+    }
+
+    if (this.state.errored) {
+      console.log(this.state.error);
+      return h("h1", {}, "wups");
     }
 
     const latest = this.state.data.series[0];
@@ -61,4 +82,4 @@ class Sensor extends Component {
   }
 }
 
-render(h(Dashboard, null), document.body);
+render(h(Dashboard), document.body);
