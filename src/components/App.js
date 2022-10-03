@@ -5,63 +5,61 @@ import * as d3 from "d3";
 
 const TempOffset = -8;
 
-export default class App extends Component {
-  render() {
-    return (
-      <div>
-        <Row>
-          <SensorSummaryLive
-            sensor={{
-              id: 2,
-              name: "outdoor",
-            }}
-          />
-          <SensorSparklineLive
-            sensor={{
-              id: 2,
-              name: "outdoor",
-            }}
-            hours={4}
-          />
-        </Row>
-        <Row>
-          <SensorSummaryLive
-            sensor={{
-              id: 1,
-              name: "indoor",
-            }}
-          />
-          <SensorSparklineLive
-            sensor={{
-              id: 1,
-              name: "indoor",
-            }}
-            hours={4}
-          />
-        </Row>
-        <Row>
-          <SensorSparklineLive
-            sensor={{
-              id: 2,
-              name: "outdoor",
-            }}
-            width={300}
-            hours={24}
-          />
-        </Row>
-        <Row>
-          <SensorSparklineLive
-            sensor={{
-              id: 1,
-              name: "indoor",
-            }}
-            width={300}
-            hours={24}
-          />
-        </Row>
-      </div>
-    );
-  }
+export default function App() {
+  return (
+    <div>
+      <Row>
+        <SensorSummaryLive
+          sensor={{
+            id: 2,
+            name: "outdoor",
+          }}
+        />
+        <SensorSparklineLive
+          sensor={{
+            id: 2,
+            name: "outdoor",
+          }}
+          hours={4}
+        />
+      </Row>
+      <Row>
+        <SensorSummaryLive
+          sensor={{
+            id: 1,
+            name: "indoor",
+          }}
+        />
+        <SensorSparklineLive
+          sensor={{
+            id: 1,
+            name: "indoor",
+          }}
+          hours={4}
+        />
+      </Row>
+      <Row>
+        <SensorSparklineLive
+          sensor={{
+            id: 2,
+            name: "outdoor",
+          }}
+          width={300}
+          hours={24}
+        />
+      </Row>
+      <Row>
+        <SensorSparklineLive
+          sensor={{
+            id: 1,
+            name: "indoor",
+          }}
+          width={300}
+          hours={24}
+        />
+      </Row>
+    </div>
+  );
 }
 
 function Row({ style, children }) {
@@ -147,7 +145,7 @@ function SensorSummary({ name, data }) {
 
   const { data_datetime, temp_f, pm2_5_aqi } = data;
   const date = unixToDate(data_datetime);
-  const { color, level, implications } = aqiScale(pm2_5_aqi);
+  const { color } = aqiScale(pm2_5_aqi);
 
   return (
     <SensorTile
@@ -219,19 +217,23 @@ function SensorTile({ style, children, ...props }) {
 class SensorSparklineLive extends Component {
   state = { loading: true };
   async componentDidMount() {
+    await this.refresh();
+  }
+
+  async refresh() {
     const { id } = this.props.sensor;
     const { hours = 6 } = this.props;
     try {
       const data = await fetchSeries(id, (hours * 60) / 2);
       this.setState({
         loading: false,
-        aqiData: data.series.map(function (d) {
+        aqiData: data.series.map((d) => {
           return {
             date: unixToDate(d.data_datetime),
             value: d.pm2_5_aqi,
           };
         }),
-        tempData: data.series.map(function (d) {
+        tempData: data.series.map((d) => {
           return {
             date: unixToDate(d.data_datetime),
             value: d.temp_f + TempOffset,
@@ -240,6 +242,7 @@ class SensorSparklineLive extends Component {
       });
     } catch (e) {}
   }
+
   render({ sensor, width = 150, ...props }, { loading, aqiData, tempData }) {
     if (loading) {
       return (
@@ -289,14 +292,14 @@ class AQISparkline extends Component {
 
     const { data } = this.props;
 
-    const max = d3.max(data, function (d) {
+    const max = d3.max(data, (d) => {
       return d.value;
     });
 
     const x = d3
       .scaleTime()
       .domain(
-        d3.extent(data, function (d) {
+        d3.extent(data, (d) => {
           return d.date;
         })
       )
@@ -326,10 +329,10 @@ class AQISparkline extends Component {
       ])
       .enter()
       .append("stop")
-      .attr("offset", function (d) {
+      .attr("offset", (d) => {
         return d.offset;
       })
-      .attr("stop-color", function (d) {
+      .attr("stop-color", (d) => {
         return d.color;
       });
 
@@ -346,10 +349,10 @@ class AQISparkline extends Component {
         "d",
         d3
           .line()
-          .x(function (d) {
+          .x((d) => {
             return x(d.date);
           })
-          .y(function (d) {
+          .y((d) => {
             return y(d.value);
           })
           .curve(d3.curveBasis)
@@ -361,8 +364,8 @@ class AQISparkline extends Component {
       <div
         ref={this.setChartRef}
         style={{
-          width: width,
-          height: height,
+          width,
+          height,
           ...style,
         }}
       />
@@ -386,11 +389,11 @@ class TempSparkline extends Component {
 
     const { data } = this.props;
 
-    var max = d3.max(data, function (d) {
+    let max = d3.max(data, (d) => {
       return d.value;
     });
 
-    var min = d3.min(data, function (d) {
+    let min = d3.min(data, (d) => {
       return d.value;
     });
 
@@ -402,7 +405,7 @@ class TempSparkline extends Component {
     const x = d3
       .scaleTime()
       .domain(
-        d3.extent(data, function (d) {
+        d3.extent(data, (d) => {
           return d.date;
         })
       )
@@ -429,10 +432,10 @@ class TempSparkline extends Component {
       ])
       .enter()
       .append("stop")
-      .attr("offset", function (d) {
+      .attr("offset", (d) => {
         return d.offset;
       })
-      .attr("stop-color", function (d) {
+      .attr("stop-color", (d) => {
         return d.color;
       });
 
@@ -449,10 +452,10 @@ class TempSparkline extends Component {
         "d",
         d3
           .line()
-          .x(function (d) {
+          .x((d) => {
             return x(d.date);
           })
-          .y(function (d) {
+          .y((d) => {
             return y(d.value);
           })
           .curve(d3.curveBasis)
@@ -464,8 +467,8 @@ class TempSparkline extends Component {
       <div
         ref={this.setChartRef}
         style={{
-          width: width,
-          height: height,
+          width,
+          height,
           ...style,
         }}
       />
