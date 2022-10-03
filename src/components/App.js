@@ -5,58 +5,33 @@ import * as d3 from "d3";
 
 const TempOffset = -8;
 
+const sensors = {
+  indoor: { id: 1, name: "indoor" },
+  outdoor: { id: 2, name: "outdoor" },
+};
+
 export default function App() {
   return (
     <div>
       <Row>
-        <SensorSummaryLive
-          sensor={{
-            id: 2,
-            name: "outdoor",
-          }}
-        />
-        <SensorSparklineLive
-          sensor={{
-            id: 2,
-            name: "outdoor",
-          }}
-          hours={4}
-        />
+        <SensorSummaryLive sensor={sensors.outdoor} />
+        <SensorSparklineLive sensor={sensors.outdoor} hours={4} />
+      </Row>
+      <Row style={{ marginBottom: 10 }}>
+        <SensorSummaryLive sensor={sensors.indoor} />
+        <SensorSparklineLive sensor={sensors.indoor} hours={4} />
       </Row>
       <Row>
-        <SensorSummaryLive
-          sensor={{
-            id: 1,
-            name: "indoor",
-          }}
-        />
-        <SensorSparklineLive
-          sensor={{
-            id: 1,
-            name: "indoor",
-          }}
-          hours={4}
-        />
+        <p>outdoor 24h</p>
+      </Row>
+      <Row style={{ marginBottom: 10 }}>
+        <SensorSparklineLive sensor={sensors.outdoor} width={340} hours={24} />
       </Row>
       <Row>
-        <SensorSparklineLive
-          sensor={{
-            id: 2,
-            name: "outdoor",
-          }}
-          width={300}
-          hours={24}
-        />
+        <p>indoor 24h</p>
       </Row>
       <Row>
-        <SensorSparklineLive
-          sensor={{
-            id: 1,
-            name: "indoor",
-          }}
-          width={300}
-          hours={24}
-        />
+        <SensorSparklineLive sensor={sensors.indoor} width={340} hours={24} />
       </Row>
     </div>
   );
@@ -143,7 +118,7 @@ function SensorSummary({ name, data }) {
     );
   }
 
-  const { data_datetime, temp_f, pm2_5_aqi } = data;
+  const { data_datetime, temp_f, pm2_5_aqi, humidity } = data;
   const date = unixToDate(data_datetime);
   const { color } = aqiScale(pm2_5_aqi);
 
@@ -166,8 +141,11 @@ function SensorSummary({ name, data }) {
           {temp_f + TempOffset}&deg;
         </Box>
       </Row>
-      <Row style={{ paddingBottom: 20 }}>
+      <Row style={{ paddingBottom: 5 }}>
         <Box>{pm2_5_aqi} AQI</Box>
+      </Row>
+      <Row style={{ paddingBottom: 10, fontSize: 12 }}>
+        <Box>{humidity}% humidity</Box>
       </Row>
       <Row>
         <Box style={{ paddingRight: 10 }}>
@@ -239,38 +217,79 @@ class SensorSparklineLive extends Component {
             value: d.temp_f + TempOffset,
           };
         }),
+        humidityData: data.series.map((d) => {
+          return {
+            date: unixToDate(d.data_datetime),
+            value: d.humidity,
+          };
+        }),
       });
     } catch (e) {}
   }
 
-  render({ sensor, width = 150, ...props }, { loading, aqiData, tempData }) {
+  render(
+    { sensor, width = 170, graphs = ["aqi", "temp", "humidity"], ...props },
+    { loading, aqiData, tempData, humidityData }
+  ) {
+    const tileHeight = graphs.length * 50 + 20;
     if (loading) {
       return (
         <SensorTile
           style={{
             backgroundImage: "linear-gradient(0deg, #ddd, #efefef)",
             width,
+            height: tileHeight,
           }}
         />
       );
     }
+
+    const sensors = graphs.map((g) => {
+      if (g == "aqi") {
+        return (
+          <AQISparkline
+            key="aqi"
+            data={aqiData}
+            width={width - 20}
+            height={50}
+            {...props}
+          />
+        );
+      }
+      if (g == "temp") {
+        return (
+          <TempSparkline
+            key="temp"
+            data={tempData}
+            width={width - 20}
+            height={50}
+            {...props}
+          />
+        );
+      }
+      if (g == "humidity") {
+        return (
+          <HumiditySparkline
+            key="humidity"
+            data={humidityData}
+            width={width - 20}
+            height={50}
+            {...props}
+          />
+        );
+      }
+      return null;
+    });
+
     return (
       <SensorTile
         style={{
           backgroundColor: "#111",
           width,
+          height: tileHeight,
         }}
       >
-        <TempSparkline
-          data={tempData}
-          width={width}
-          height={50}
-          style={{
-            marginBottom: 40,
-          }}
-          {...props}
-        />
-        <AQISparkline data={aqiData} width={width} height={50} {...props} />
+        {sensors}
       </SensorTile>
     );
   }
@@ -312,7 +331,7 @@ class AQISparkline extends Component {
 
     svg
       .append("linearGradient")
-      .attr("id", "line-gradient")
+      .attr("id", "aqi-line-gradient")
       .attr("gradientUnits", "userSpaceOnUse")
       .attr("x1", 0)
       .attr("y1", y(0))
@@ -341,7 +360,7 @@ class AQISparkline extends Component {
       .append("path")
       .datum(data)
       .attr("fill", "none")
-      .attr("stroke", "url(#line-gradient)")
+      .attr("stroke", "url(#aqi-line-gradient)")
       .attr("stroke-width", 3)
       .attr("stroke-linecap", "round")
       .attr("stroke-linejoin", "round")
@@ -418,7 +437,7 @@ class TempSparkline extends Component {
 
     svg
       .append("linearGradient")
-      .attr("id", "line-gradient2")
+      .attr("id", "temp-line-gradient")
       .attr("gradientUnits", "userSpaceOnUse")
       .attr("x1", 0)
       .attr("y1", y(0))
@@ -444,7 +463,109 @@ class TempSparkline extends Component {
       .append("path")
       .datum(data)
       .attr("fill", "none")
-      .attr("stroke", "url(#line-gradient2)")
+      .attr("stroke", "url(#temp-line-gradient)")
+      .attr("stroke-width", 3)
+      .attr("stroke-linecap", "round")
+      .attr("stroke-linejoin", "round")
+      .attr(
+        "d",
+        d3
+          .line()
+          .x((d) => {
+            return x(d.date);
+          })
+          .y((d) => {
+            return y(d.value);
+          })
+          .curve(d3.curveBasis)
+      );
+  };
+
+  render({ style, width, height }) {
+    return (
+      <div
+        ref={this.setChartRef}
+        style={{
+          width,
+          height,
+          ...style,
+        }}
+      />
+    );
+  }
+}
+
+class HumiditySparkline extends Component {
+  setChartRef = (dom) => {
+    const margin = 5,
+      width = this.props.width - margin - margin,
+      height = this.props.height - margin - margin;
+
+    const svg = d3
+      .select(dom)
+      .append("svg")
+      .attr("width", width + margin + margin)
+      .attr("height", height + margin + margin)
+      .append("g")
+      .attr("transform", `translate(${margin},${margin})`);
+
+    const { data } = this.props;
+
+    let max = d3.max(data, (d) => {
+      return d.value;
+    });
+
+    let min = d3.min(data, (d) => {
+      return d.value;
+    });
+
+    if (Math.abs(max - min) < 5) {
+      max += 2;
+      min -= 2;
+    }
+
+    const x = d3
+      .scaleTime()
+      .domain(
+        d3.extent(data, (d) => {
+          return d.date;
+        })
+      )
+      .range([0, width]);
+
+    const y = d3.scaleLinear().domain([min, max]).range([height, 0]);
+
+    // const yAxis = d3.axisLeft(y).tickSize(-width).ticks(5);
+    // svg.append("g").call(yAxis);
+
+    svg
+      .append("linearGradient")
+      .attr("id", "humidity-line-gradient")
+      .attr("gradientUnits", "userSpaceOnUse")
+      .attr("x1", 0)
+      .attr("y1", y(0))
+      .attr("x2", 0)
+      .attr("y2", y(100))
+      .selectAll("stop")
+      .data([
+        { offset: "0%", color: "#fff" },
+        { offset: "100%", color: "#00f" },
+      ])
+      .enter()
+      .append("stop")
+      .attr("offset", (d) => {
+        return d.offset;
+      })
+      .attr("stop-color", (d) => {
+        return d.color;
+      });
+
+    // Add the line
+    svg
+      .append("path")
+      .datum(data)
+      .attr("fill", "none")
+      .attr("stroke", "url(#humidity-line-gradient)")
       .attr("stroke-width", 3)
       .attr("stroke-linecap", "round")
       .attr("stroke-linejoin", "round")
