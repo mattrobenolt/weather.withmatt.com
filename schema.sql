@@ -34,7 +34,7 @@ CREATE TABLE `sensorlog` (
   `pm2_5_atm` float(2) NOT NULL,
   `timestamp` timestamp NOT NULL,
   PRIMARY KEY (`id`),
-  UNIQUE `sensor_datetime` (`sensor_id`, `data_datetime`),
+  UNIQUE `sensor_datetime` (`sensor_id`, `data_datetime` DESC),
   INDEX (`sensor_id`),
   INDEX (`data_datetime` DESC),
   INDEX (`timestamp` DESC)

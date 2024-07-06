@@ -118,8 +118,8 @@ function SensorSummary({ name, data }) {
     );
   }
 
-  const { data_datetime, temp_f, pm2_5_aqi, humidity } = data;
-  const date = unixToDate(data_datetime);
+  const { unix_data_datetime, temp_f, pm2_5_aqi, humidity } = data;
+  const date = unixToDate(unix_data_datetime);
   const { color } = aqiScale(pm2_5_aqi);
 
   return (
@@ -207,19 +207,19 @@ class SensorSparklineLive extends Component {
         loading: false,
         aqiData: data.series.map((d) => {
           return {
-            date: unixToDate(d.data_datetime),
+            date: unixToDate(d.unix_data_datetime),
             value: d.pm2_5_aqi,
           };
         }),
         tempData: data.series.map((d) => {
           return {
-            date: unixToDate(d.data_datetime),
+            date: unixToDate(d.unix_data_datetime),
             value: d.temp_f + TempOffset,
           };
         }),
         humidityData: data.series.map((d) => {
           return {
-            date: unixToDate(d.data_datetime),
+            date: unixToDate(d.unix_data_datetime),
             value: d.humidity,
           };
         }),

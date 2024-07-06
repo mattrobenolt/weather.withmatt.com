@@ -42,7 +42,7 @@ export default async function handler(req: Request) {
   const conn = db.connection();
 
   const result = await db.execute(
-    "SELECT UNIX_TIMESTAMP(`data_datetime`) AS `data_datetime`, `temp_f`, `humidity`, `dewpoint_f`, `pressure`, `pm2_5_aqi`, `pm2_5_cf_1`, `pm2_5_atm` FROM `sensorlog` WHERE `sensor_id`=? ORDER BY `data_datetime` DESC LIMIT ?",
+    "SELECT UNIX_TIMESTAMP(`data_datetime`) AS `unix_data_datetime`, `temp_f`, `humidity`, `dewpoint_f`, `pressure`, `pm2_5_aqi`, `pm2_5_cf_1`, `pm2_5_atm` FROM `sensorlog` WHERE `sensor_id`=? ORDER BY `data_datetime` DESC LIMIT ?",
     [sensorId, limit]
   );
 
