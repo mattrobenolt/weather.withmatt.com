@@ -30,6 +30,12 @@ function parseDatetime(dt) {
   );
 }
 
+function parseDewpoint(dp) {
+  // sometimes dewpoint_f is `nan`
+  if (typeof dp === 'number') return dp;
+  return 0;
+}
+
 function sensorFromBody(body) {
   return {
     mac: body.SensorId,
@@ -46,7 +52,7 @@ function dataFromBody(sensorId, body) {
     data_datetime: parseDatetime(body.DateTime),
     temp_f: body.current_temp_f,
     humidity: body.current_humidity,
-    dewpoint_f: body.current_dewpoint_f,
+    dewpoint_f: parseDewpoint(body.current_dewpoint_f),
     pressure: body.pressure,
     pm2_5_aqi: body["pm2.5_aqi"],
     pm2_5_cf_1: body.pm2_5_cf_1,
