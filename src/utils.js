@@ -1,5 +1,5 @@
 export function unixToDate(value) {
-  return new Date(parseInt(value, 10) * 1000);
+  return new Date(Number.parseInt(value, 10) * 1000);
 }
 
 export function aqiScale(value) {

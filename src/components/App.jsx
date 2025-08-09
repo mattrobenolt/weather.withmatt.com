@@ -1,7 +1,7 @@
-import { Component } from "preact";
-import RelativeTime from "./RelativeTime";
-import { unixToDate, aqiScale } from "../utils";
 import * as d3 from "d3";
+import { Component } from "preact";
+import { aqiScale, unixToDate } from "../utils";
+import RelativeTime from "./RelativeTime";
 
 const TempOffset = -8;
 
@@ -55,11 +55,8 @@ function Row({ style, children }) {
 }
 
 async function fetchSeries(sensorId, limit = 1) {
-  const resp = await fetch(
-    `https://weather.withmatt.com/api/series?id=${sensorId}&limit=${limit}`
-  );
-  const data = resp.json();
-  return data;
+  const resp = await fetch(`/api/series?id=${sensorId}&limit=${limit}`);
+  return resp.json();
 }
 
 class SensorSummaryLive extends Component {
@@ -224,12 +221,12 @@ class SensorSparklineLive extends Component {
           };
         }),
       });
-    } catch (e) {}
+    } catch (_e) {}
   }
 
   render(
     { sensor, width = 170, graphs = ["aqi", "temp", "humidity"], ...props },
-    { loading, aqiData, tempData, humidityData }
+    { loading, aqiData, tempData, humidityData },
   ) {
     const tileHeight = graphs.length * 50 + 20;
     if (loading) {
@@ -245,7 +242,7 @@ class SensorSparklineLive extends Component {
     }
 
     const sensors = graphs.map((g) => {
-      if (g == "aqi") {
+      if (g === "aqi") {
         return (
           <AQISparkline
             key="aqi"
@@ -256,7 +253,7 @@ class SensorSparklineLive extends Component {
           />
         );
       }
-      if (g == "temp") {
+      if (g === "temp") {
         return (
           <TempSparkline
             key="temp"
@@ -267,7 +264,7 @@ class SensorSparklineLive extends Component {
           />
         );
       }
-      if (g == "humidity") {
+      if (g === "humidity") {
         return (
           <HumiditySparkline
             key="humidity"
@@ -297,9 +294,9 @@ class SensorSparklineLive extends Component {
 
 class AQISparkline extends Component {
   setChartRef = (dom) => {
-    const margin = 5,
-      width = this.props.width - margin - margin,
-      height = this.props.height - margin - margin;
+    const margin = 5;
+    const width = this.props.width - margin - margin;
+    const height = this.props.height - margin - margin;
 
     const svg = d3
       .select(dom)
@@ -320,7 +317,7 @@ class AQISparkline extends Component {
       .domain(
         d3.extent(data, (d) => {
           return d.date;
-        })
+        }),
       )
       .range([0, width]);
 
@@ -374,7 +371,7 @@ class AQISparkline extends Component {
           .y((d) => {
             return y(d.value);
           })
-          .curve(d3.curveBasis)
+          .curve(d3.curveBasis),
       );
   };
 
@@ -394,9 +391,9 @@ class AQISparkline extends Component {
 
 class TempSparkline extends Component {
   setChartRef = (dom) => {
-    const margin = 5,
-      width = this.props.width - margin - margin,
-      height = this.props.height - margin - margin;
+    const margin = 5;
+    const width = this.props.width - margin - margin;
+    const height = this.props.height - margin - margin;
 
     const svg = d3
       .select(dom)
@@ -426,7 +423,7 @@ class TempSparkline extends Component {
       .domain(
         d3.extent(data, (d) => {
           return d.date;
-        })
+        }),
       )
       .range([0, width]);
 
@@ -477,7 +474,7 @@ class TempSparkline extends Component {
           .y((d) => {
             return y(d.value);
           })
-          .curve(d3.curveBasis)
+          .curve(d3.curveBasis),
       );
   };
 
@@ -497,9 +494,9 @@ class TempSparkline extends Component {
 
 class HumiditySparkline extends Component {
   setChartRef = (dom) => {
-    const margin = 5,
-      width = this.props.width - margin - margin,
-      height = this.props.height - margin - margin;
+    const margin = 5;
+    const width = this.props.width - margin - margin;
+    const height = this.props.height - margin - margin;
 
     const svg = d3
       .select(dom)
@@ -529,7 +526,7 @@ class HumiditySparkline extends Component {
       .domain(
         d3.extent(data, (d) => {
           return d.date;
-        })
+        }),
       )
       .range([0, width]);
 
@@ -579,7 +576,7 @@ class HumiditySparkline extends Component {
           .y((d) => {
             return y(d.value);
           })
-          .curve(d3.curveBasis)
+          .curve(d3.curveBasis),
       );
   };
 
